@@ -30,4 +30,7 @@
     <string name="no_search_results">Event tidak ditemukan.</string>
     <string name="error_search">Gagal melakukan pencarian.</string>
     <string name="title_search_results">Hasil Pencarian</string>
+
+    <string name="error_network">Tidak ada koneksi internet. Periksa jaringan Anda.</string>
+    <string name="error_unexpected">Terjadi kesalahan yang tidak diduga.</string>
 </resources>

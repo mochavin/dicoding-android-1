@@ -19,13 +19,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
-    private lateinit var appBarConfiguration: AppBarConfiguration
+    private lateinit var appBarConfiguration: AppBarConfiguration // Make it a class property
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Set the custom Toolbar
+        setSupportActionBar(binding.toolbar)
 
         val navView: BottomNavigationView = binding.navView
 
@@ -38,19 +41,26 @@ class MainActivity : AppCompatActivity() {
 
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
+        // **Add navigation_home here**
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                // Masukkan ID top-level fragment (yang ada di bottom nav)
-                R.id.navigation_active_events, R.id.navigation_finished_events
+                R.id.navigation_home, R.id.navigation_active_events, R.id.navigation_finished_events
             )
         )
-        // Setup ActionBar (jika ada) dengan NavController
+        // Setup ActionBar (our Toolbar) with NavController and the updated AppBarConfiguration
         setupActionBarWithNavController(navController, appBarConfiguration)
-        // Setup BottomNavigationView dengan NavController
+        // Setup BottomNavigationView with NavController
         navView.setupWithNavController(navController)
     }
 
     override fun onSupportNavigateUp(): Boolean {
+        // Ensure navController is initialized before using it (good practice)
+        // The appBarConfiguration is now a class property, ensure it's initialized too.
+        if (!::navController.isInitialized || !::appBarConfiguration.isInitialized) {
+            return super.onSupportNavigateUp()
+        }
+        // Delegate navigation to the NavController, using the appBarConfiguration.
+        // Fall back to the default super implementation if NavController doesn't handle it.
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
