@@ -23,4 +23,11 @@
     <string name="no_active_events">Tidak ada event aktif saat ini.</string>
     <string name="no_finished_events">Tidak ada event yang telah selesai.</string>
 
+    <string name="search_title">Cari Event</string>
+    <string name="search_hint">Ketik nama event...</string>
+    <string name="no_active_events_home">Belum ada event aktif.</string>
+    <string name="no_finished_events_home">Belum ada event selesai.</string>
+    <string name="no_search_results">Event tidak ditemukan.</string>
+    <string name="error_search">Gagal melakukan pencarian.</string>
+    <string name="title_search_results">Hasil Pencarian</string>
 </resources>

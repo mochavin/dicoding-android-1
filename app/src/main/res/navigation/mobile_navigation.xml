@@ -3,7 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_active_events">
+    app:startDestination="@+id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.example.eventappdicoding.ui.home.HomeFragment"
+        android:label="@string/title_home"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_homeFragment_to_eventDetail"
+            app:destination="@id/navigation_event_detail" />
+        <!-- Action to Search Results -->
+        <action
+            android:id="@+id/action_homeFragment_to_searchEventsFragment"
+            app:destination="@id/navigation_search_results" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_active_events"
@@ -13,6 +27,10 @@
         <action
             android:id="@+id/action_activeEvents_to_eventDetail"
             app:destination="@id/navigation_event_detail" />
+        <!-- Action to Search Results -->
+        <action
+            android:id="@+id/action_activeEvents_to_searchEventsFragment"
+            app:destination="@id/navigation_search_results" />
     </fragment>
 
     <fragment
@@ -23,6 +41,10 @@
         <action
             android:id="@+id/action_finishedEvents_to_eventDetail"
             app:destination="@id/navigation_event_detail" />
+        <!-- Action to Search Results -->
+        <action
+            android:id="@+id/action_finishedEvents_to_searchEventsFragment"
+            app:destination="@id/navigation_search_results" />
     </fragment>
 
     <fragment
@@ -33,6 +55,19 @@
         <argument
             android:name="eventId"
             app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_search_results"
+        android:name="com.example.eventappdicoding.ui.search.SearchEventsFragment"
+        android:label="@string/title_search_results"
+        tools:layout="@layout/fragment_search_events">
+        <argument
+            android:name="query"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_searchEventsFragment_to_eventDetail"
+            app:destination="@id/navigation_event_detail" />
     </fragment>
 
 </navigation>

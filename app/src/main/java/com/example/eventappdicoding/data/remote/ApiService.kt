@@ -11,8 +11,8 @@ interface ApiService {
 
     @GET("events")
     suspend fun getEvents(
-        @Query("active") active: Int // 1 for active, 0 for finished, -1 for search
-        // @Query("q") query: String? = null // Untuk search nanti
+        @Query("active") active: Int, // 1 for active, 0 for finished, -1 for search
+        @Query("q") query: String? = null // Add nullable query parameter for search
     ): Response<EventResponse> // Gunakan Response<> untuk error handling
 
     @GET("events/{id}")
