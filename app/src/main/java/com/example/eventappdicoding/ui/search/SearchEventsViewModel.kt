@@ -4,54 +4,35 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.eventappdicoding.data.Resource
 import com.example.eventappdicoding.data.model.EventItem
-import com.example.eventappdicoding.data.remote.ApiClient
+import com.example.eventappdicoding.data.repository.IEventRepository
 import kotlinx.coroutines.launch
 
-class SearchEventsViewModel : ViewModel() {
+class SearchEventsViewModel(private val repository: IEventRepository) : ViewModel() {
 
-    private val apiService = ApiClient.instance
-
-    private val _searchResults = MutableLiveData<List<EventItem>>()
-    val searchResults: LiveData<List<EventItem>> = _searchResults
-
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
-
-    private val _error = MutableLiveData<String?>()
-    val error: LiveData<String?> = _error
+    private val _searchResults = MutableLiveData<Resource<List<EventItem>>>()
+    val searchResults: LiveData<Resource<List<EventItem>>> = _searchResults
 
     fun searchEvents(query: String) {
-        // Avoid searching if query is blank or if already loading
-        if (query.isBlank() || _isLoading.value == true) {
-            // Optionally clear results or show specific message for blank query
-            if(query.isBlank()) {
-                _searchResults.value = emptyList()
-                _error.value = null // Clear previous errors
-            }
+        if (query.isBlank()) {
+            // Clear results or show specific message for blank query
+            _searchResults.value = Resource.Success(emptyList()) // Show empty state explicitly
             return
         }
+        // Avoid searching if already loading
+        if (_searchResults.value is Resource.Loading) return
 
         viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-            _searchResults.value = emptyList() // Clear previous results
-            try {
-                val response = apiService.getEvents(active = -1, query = query) // active = -1 for search
-                if (response.isSuccessful) {
-                    _searchResults.value = response.body()?.data ?: emptyList()
-                    if (_searchResults.value.isNullOrEmpty()){
-                        // If API call succeeded but returned no data, set error message for no results
-                        _error.value = "no_results" // Use a special key or the actual string resource ID
-                    }
-                } else {
-                    _error.value = "Error Search: ${response.code()} ${response.message()}"
-                }
-            } catch (e: Exception) {
-                _error.value = "Failure Search: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
+            _searchResults.value = Resource.Loading()
+            val resource = repository.getEvents(active = -1, query = query) // active = -1 for search
+            _searchResults.value = resource // Post result (Success or Error)
+
+            // Optional: Post a specific error if Success but empty list?
+            // The UI layer is often better suited to interpret "Success + Empty List"
+            // if (resource is Resource.Success && resource.data.isNullOrEmpty()){
+            //      _searchResults.value = Resource.Error("No results found.", emptyList())
+            // }
         }
     }
 }

@@ -7,25 +7,31 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.viewModels // Use this import
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.eventappdicoding.R
+import com.example.eventappdicoding.data.Resource // Import Resource
 import com.example.eventappdicoding.databinding.FragmentSearchEventsBinding
+import com.example.eventappdicoding.di.ViewModelFactory // Import Factory
 import com.example.eventappdicoding.ui.adapter.EventListAdapter
+// Import correct ViewModel if package changed, assumed it's still here
+// import com.example.eventappdicoding.ui.search.SearchEventsViewModel
 
 class SearchEventsFragment : Fragment() {
 
     private var _binding: FragmentSearchEventsBinding? = null
     private val binding get() = _binding!!
 
-    private val searchViewModel: SearchEventsViewModel by viewModels()
+    // Instantiate ViewModel using factory
+    private val searchViewModel: SearchEventsViewModel by viewModels {
+        ViewModelFactory.getInstance(requireActivity().application)
+    }
     private lateinit var searchAdapter: EventListAdapter
     private val args: SearchEventsFragmentArgs by navArgs()
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentSearchEventsBinding.inflate(inflater, container, false)
         return binding.root
@@ -33,23 +39,21 @@ class SearchEventsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
         observeViewModel()
 
-        // Get query from arguments and trigger search
         val query = args.query
-        if (savedInstanceState == null) { // Search only on initial creation, not on rotation
+        // Search only on initial creation or if query changes and isn't blank
+        // ViewModel internal logic prevents re-searching same query if loading/success
+        if (savedInstanceState == null && query.isNotBlank()) {
             searchViewModel.searchEvents(query)
         }
-        // Optional: Set fragment title based on query
-        (requireActivity() as? AppCompatActivity)?.supportActionBar?.title = getString(R.string.title_search_results) // Example title change
 
+        (requireActivity() as? AppCompatActivity)?.supportActionBar?.title = getString(R.string.title_search_results) + ": \"${query}\""
     }
 
     private fun setupRecyclerView() {
         searchAdapter = EventListAdapter { event ->
-            // Navigate to detail from search results
             val action = SearchEventsFragmentDirections.actionSearchEventsFragmentToEventDetail(event.id)
             findNavController().navigate(action)
         }
@@ -57,47 +61,32 @@ class SearchEventsFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        searchViewModel.searchResults.observe(viewLifecycleOwner) { results ->
-            searchAdapter.submitList(results)
-            binding.rvSearchResults.isVisible = !results.isNullOrEmpty()
-            // Check for the "no results" specific error case
-            if (results.isNullOrEmpty() && searchViewModel.error.value == "no_results" && !searchViewModel.isLoading.value!!) {
-                binding.tvErrorSearch.text = getString(R.string.no_search_results)
-                binding.tvErrorSearch.isVisible = true
-                binding.rvSearchResults.isVisible = false // Ensure RV is hidden
-            } else if (results.isNullOrEmpty() && searchViewModel.error.value == null && !searchViewModel.isLoading.value!!) {
-                // Hide error if list is empty but no error occurred (e.g., blank search initially)
-                binding.tvErrorSearch.isVisible = false
-            }
-        }
+        searchViewModel.searchResults.observe(viewLifecycleOwner) { resource ->
+            binding.progressBarSearch.isVisible = resource is Resource.Loading
+            binding.rvSearchResults.isVisible = resource is Resource.Success && !resource.data.isNullOrEmpty()
+            // Show error text view on Error OR if Success but the list is empty
+            binding.tvErrorSearch.isVisible = resource is Resource.Error || (resource is Resource.Success && resource.data.isNullOrEmpty())
 
-        searchViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBarSearch.isVisible = isLoading
-            if (isLoading) {
-                binding.rvSearchResults.isVisible = false
-                binding.tvErrorSearch.isVisible = false // Hide error during load
-            }
-        }
-
-        searchViewModel.error.observe(viewLifecycleOwner) { error ->
-            val showError = error != null && error != "no_results" && !searchViewModel.isLoading.value!!
-            binding.tvErrorSearch.isVisible = showError
-            binding.rvSearchResults.isVisible = error == null && !searchViewModel.isLoading.value!!
-
-            if (showError) {
-                binding.tvErrorSearch.text = error ?: getString(R.string.error_search)
-            } else if (error == "no_results" && !searchViewModel.isLoading.value!!) {
-                // Handle "no results" case (already handled in searchResults observer, but keep consistent)
-                binding.tvErrorSearch.text = getString(R.string.no_search_results)
-                binding.tvErrorSearch.isVisible = true
-                binding.rvSearchResults.isVisible = false
+            when (resource) {
+                is Resource.Loading -> { /* Handled by visibility */ }
+                is Resource.Success -> {
+                    if (resource.data.isNullOrEmpty()) {
+                        // Use specific "no results" string
+                        binding.tvErrorSearch.text = getString(R.string.no_search_results)
+                    } else {
+                        searchAdapter.submitList(resource.data)
+                    }
+                }
+                is Resource.Error -> {
+                    binding.tvErrorSearch.text = resource.message ?: getString(R.string.error_search)
+                }
             }
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        binding.rvSearchResults.adapter = null // Clear adapter reference
+        binding.rvSearchResults.adapter = null
         _binding = null
     }
 }

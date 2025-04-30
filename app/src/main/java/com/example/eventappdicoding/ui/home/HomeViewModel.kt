@@ -4,86 +4,63 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.eventappdicoding.data.Resource
 import com.example.eventappdicoding.data.model.EventItem
-import com.example.eventappdicoding.data.remote.ApiClient
+import com.example.eventappdicoding.data.repository.IEventRepository // Use Interface
 import kotlinx.coroutines.launch
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(private val repository: IEventRepository) : ViewModel() {
 
-    private val apiService = ApiClient.instance
     private val maxItemsPerSection = 5 // Max items to show
 
-    // LiveData for active events
-    private val _activeEvents = MutableLiveData<List<EventItem>>()
-    val activeEvents: LiveData<List<EventItem>> = _activeEvents
+    // LiveData for active events using Resource
+    private val _activeEvents = MutableLiveData<Resource<List<EventItem>>>()
+    val activeEvents: LiveData<Resource<List<EventItem>>> = _activeEvents
 
-    private val _isLoadingActive = MutableLiveData<Boolean>()
-    val isLoadingActive: LiveData<Boolean> = _isLoadingActive
-
-    private val _errorActive = MutableLiveData<String?>()
-    val errorActive: LiveData<String?> = _errorActive
-
-    // LiveData for finished events
-    private val _finishedEvents = MutableLiveData<List<EventItem>>()
-    val finishedEvents: LiveData<List<EventItem>> = _finishedEvents
-
-    private val _isLoadingFinished = MutableLiveData<Boolean>()
-    val isLoadingFinished: LiveData<Boolean> = _isLoadingFinished
-
-    private val _errorFinished = MutableLiveData<String?>()
-    val errorFinished: LiveData<String?> = _errorFinished
+    // LiveData for finished events using Resource
+    private val _finishedEvents = MutableLiveData<Resource<List<EventItem>>>()
+    val finishedEvents: LiveData<Resource<List<EventItem>>> = _finishedEvents
 
     init {
         // Fetch data when ViewModel is created
         fetchHomeEvents()
     }
 
-
     fun fetchHomeEvents() {
         // Fetch both only if needed (e.g., on initial load or swipe refresh)
-        if (_activeEvents.value == null) fetchActiveEventsForHome()
-        if (_finishedEvents.value == null) fetchFinishedEventsForHome()
+        // Check if data is null or if the current state is an error to allow retries
+        if (_activeEvents.value?.data == null || _activeEvents.value is Resource.Error) {
+            fetchActiveEventsForHome()
+        }
+        if (_finishedEvents.value?.data == null || _finishedEvents.value is Resource.Error) {
+            fetchFinishedEventsForHome()
+        }
     }
-
 
     private fun fetchActiveEventsForHome() {
         viewModelScope.launch {
-            _isLoadingActive.value = true
-            _errorActive.value = null
-            try {
-                // Assume ApiService is modified to accept null query
-                val response = apiService.getEvents(active = 1, query = null)
-                if (response.isSuccessful) {
-                    val allActive = response.body()?.data ?: emptyList()
-                    _activeEvents.value = allActive.take(maxItemsPerSection)
-                } else {
-                    _errorActive.value = "Error Active: ${response.code()} ${response.message()}"
-                }
-            } catch (e: Exception) {
-                _errorActive.value = "Failure Active: ${e.message}"
-            } finally {
-                _isLoadingActive.value = false
+            _activeEvents.value = Resource.Loading() // Set loading state
+            val resource = repository.getEvents(active = 1, query = null)
+            // Post the result (Success or Error)
+            if (resource is Resource.Success) {
+                // Limit the items after fetching successfully
+                _activeEvents.value = Resource.Success(resource.data?.take(maxItemsPerSection) ?: emptyList())
+            } else {
+                _activeEvents.value = resource // Post error directly
             }
         }
     }
 
     private fun fetchFinishedEventsForHome() {
         viewModelScope.launch {
-            _isLoadingFinished.value = true
-            _errorFinished.value = null
-            try {
-                // Assume ApiService is modified to accept null query
-                val response = apiService.getEvents(active = 0, query = null)
-                if (response.isSuccessful) {
-                    val allFinished = response.body()?.data ?: emptyList()
-                    _finishedEvents.value = allFinished.take(maxItemsPerSection)
-                } else {
-                    _errorFinished.value = "Error Finished: ${response.code()} ${response.message()}"
-                }
-            } catch (e: Exception) {
-                _errorFinished.value = "Failure Finished: ${e.message}"
-            } finally {
-                _isLoadingFinished.value = false
+            _finishedEvents.value = Resource.Loading() // Set loading state
+            val resource = repository.getEvents(active = 0, query = null)
+            // Post the result (Success or Error)
+            if (resource is Resource.Success) {
+                // Limit the items after fetching successfully
+                _finishedEvents.value = Resource.Success(resource.data?.take(maxItemsPerSection) ?: emptyList())
+            } else {
+                _finishedEvents.value = resource // Post error directly
             }
         }
     }

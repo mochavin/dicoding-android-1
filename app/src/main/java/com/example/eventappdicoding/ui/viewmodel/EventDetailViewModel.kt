@@ -4,43 +4,28 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.eventappdicoding.data.Resource
 import com.example.eventappdicoding.data.model.EventDetail
-import com.example.eventappdicoding.data.remote.ApiClient
+import com.example.eventappdicoding.data.repository.IEventRepository // Use Interface
 import kotlinx.coroutines.launch
 
-class EventDetailViewModel : ViewModel() {
+class EventDetailViewModel(private val repository: IEventRepository) : ViewModel() {
 
-    private val apiService = ApiClient.instance
-
-    private val _eventDetail = MutableLiveData<EventDetail?>()
-    val eventDetail: LiveData<EventDetail?> = _eventDetail
-
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
-
-    private val _error = MutableLiveData<String?>()
-    val error: LiveData<String?> = _error
+    private val _eventDetail = MutableLiveData<Resource<EventDetail>>()
+    val eventDetail: LiveData<Resource<EventDetail>> = _eventDetail
 
     fun fetchEventDetail(eventId: String) {
+        // Only fetch if not already loading or success
+        if (_eventDetail.value is Resource.Loading || _eventDetail.value is Resource.Success) {
+            // Optionally allow refresh by checking a flag or comparing eventId
+            // if (eventId != _eventDetail.value?.data?.id || _eventDetail.value is Resource.Error) { /* proceed */ }
+            // For now, simple check: don't refetch if already loading/success
+            // return
+        }
+
         viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-            _eventDetail.value = null // Clear previous detail
-            try {
-                val response = apiService.getEventDetail(eventId)
-                if (response.isSuccessful) {
-                    _eventDetail.value = response.body()?.data
-                    if (_eventDetail.value == null) {
-                        _error.value = "Data detail event tidak ditemukan."
-                    }
-                } else {
-                    _error.value = "Error: ${response.code()} ${response.message()}"
-                }
-            } catch (e: Exception) {
-                _error.value = "Failure: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
+            _eventDetail.value = Resource.Loading()
+            _eventDetail.value = repository.getEventDetail(eventId)
         }
     }
 }

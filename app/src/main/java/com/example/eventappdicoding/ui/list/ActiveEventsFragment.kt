@@ -6,24 +6,28 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.viewModels // Use this import
 import androidx.navigation.fragment.findNavController
 import com.example.eventappdicoding.R
-import com.example.eventappdicoding.databinding.FragmentActiveEventsBinding // ViewBinding
+import com.example.eventappdicoding.data.Resource // Import Resource
+import com.example.eventappdicoding.databinding.FragmentActiveEventsBinding
+import com.example.eventappdicoding.di.ViewModelFactory // Import Factory
 import com.example.eventappdicoding.ui.adapter.EventListAdapter
-import com.example.eventappdicoding.ui.viewmodel.EventsViewModel
+import com.example.eventappdicoding.ui.viewmodel.EventsViewModel // Import correct ViewModel
 
 class ActiveEventsFragment : Fragment() {
 
     private var _binding: FragmentActiveEventsBinding? = null
     private val binding get() = _binding!!
 
-    private val eventsViewModel: EventsViewModel by viewModels()
+    // Instantiate ViewModel using factory
+    private val eventsViewModel: EventsViewModel by viewModels {
+        ViewModelFactory.getInstance(requireActivity().application)
+    }
     private lateinit var eventAdapter: EventListAdapter
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentActiveEventsBinding.inflate(inflater, container, false)
         return binding.root
@@ -31,15 +35,10 @@ class ActiveEventsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
         observeViewModel()
-
-        // Panggil fetch data jika belum ada data atau jika ada error sebelumnya
-        // This ensures data is fetched on first load or if a previous attempt failed.
-        if (eventsViewModel.activeEvents.value == null || eventsViewModel.errorActive.value != null) {
-            eventsViewModel.fetchActiveEvents()
-        }
+        // Trigger fetch if needed (ViewModel logic handles re-fetching)
+        eventsViewModel.fetchActiveEvents()
     }
 
     private fun setupRecyclerView() {
@@ -51,55 +50,37 @@ class ActiveEventsFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        eventsViewModel.isLoadingActive.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBarActive.isVisible = isLoading
-            // Hide content and error message when loading
-            if (isLoading) {
-                binding.rvActiveEvents.isVisible = false
-                binding.tvErrorActive.isVisible = false
-            } else {
-                binding.rvActiveEvents.isVisible = true
-                binding.tvErrorActive.isVisible = true
-            }
-        }
+        eventsViewModel.activeEvents.observe(viewLifecycleOwner) { resource ->
+            binding.progressBarActive.isVisible = resource is Resource.Loading
+            binding.rvActiveEvents.isVisible = resource is Resource.Success && !resource.data.isNullOrEmpty()
+            binding.tvErrorActive.isVisible = resource is Resource.Error || (resource is Resource.Success && resource.data.isNullOrEmpty())
 
-        eventsViewModel.errorActive.observe(viewLifecycleOwner) { error ->
-            // Show error only if not loading
-            val showError = error != null && eventsViewModel.isLoadingActive.value == false
-            binding.tvErrorActive.isVisible = showError
-            if (showError) {
-                binding.tvErrorActive.text = error // Display the error message from ViewModel
-                binding.rvActiveEvents.isVisible = false // Hide list on error
-            }
-        }
-
-        eventsViewModel.activeEvents.observe(viewLifecycleOwner) { events ->
-            eventAdapter.submitList(events)
-            // Handle visibility after loading and error checks are done
-            val isLoading = eventsViewModel.isLoadingActive.value ?: false
-            val error = eventsViewModel.errorActive.value
-            if (!isLoading && error == null) {
-                if (events.isNullOrEmpty()) {
-                    // Show "No events" message if list is empty and no error occurred
-                    binding.tvErrorActive.isVisible = true
-                    binding.tvErrorActive.text = getString(R.string.no_active_events)
-                    binding.rvActiveEvents.isVisible = false
-                } else {
-                    // Show list if data is present, not loading, and no error
-                    binding.tvErrorActive.isVisible = false
-                    binding.rvActiveEvents.isVisible = true
+            when (resource) {
+                is Resource.Loading -> {
+                    // Handle loading state (progress bar is already visible)
                 }
-            } else if (error != null) {
-                // Ensure list stays hidden if there was an error (already handled in error observer, but safe)
-                binding.rvActiveEvents.isVisible = false
+                is Resource.Success -> {
+                    if (resource.data.isNullOrEmpty()) {
+                        // Show "No events" message
+                        binding.tvErrorActive.text = getString(R.string.no_active_events)
+                    } else {
+                        // Update the adapter
+                        eventAdapter.submitList(resource.data)
+                    }
+                }
+                is Resource.Error -> {
+                    // Show error message
+                    binding.tvErrorActive.text = resource.message ?: getString(R.string.error_loading_data)
+                    // Optionally, clear the adapter list on persistent errors
+                    // eventAdapter.submitList(emptyList())
+                }
             }
-            // If loading, visibility is handled by isLoading observer
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        binding.rvActiveEvents.adapter = null // Prevent memory leaks
+        binding.rvActiveEvents.adapter = null
         _binding = null
     }
 }

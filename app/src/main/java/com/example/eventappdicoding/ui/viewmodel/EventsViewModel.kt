@@ -4,72 +4,36 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.eventappdicoding.data.Resource
 import com.example.eventappdicoding.data.model.EventItem
-import com.example.eventappdicoding.data.remote.ApiClient
+import com.example.eventappdicoding.data.repository.IEventRepository // Use Interface
 import kotlinx.coroutines.launch
 
-class EventsViewModel : ViewModel() {
-
-    private val apiService = ApiClient.instance
+class EventsViewModel(private val repository: IEventRepository) : ViewModel() {
 
     // LiveData untuk event aktif
-    private val _activeEvents = MutableLiveData<List<EventItem>>()
-    val activeEvents: LiveData<List<EventItem>> = _activeEvents
-
-    private val _isLoadingActive = MutableLiveData<Boolean>()
-    val isLoadingActive: LiveData<Boolean> = _isLoadingActive
-
-    private val _errorActive = MutableLiveData<String?>()
-    val errorActive: LiveData<String?> = _errorActive
+    private val _activeEvents = MutableLiveData<Resource<List<EventItem>>>()
+    val activeEvents: LiveData<Resource<List<EventItem>>> = _activeEvents
 
     // LiveData untuk event selesai
-    private val _finishedEvents = MutableLiveData<List<EventItem>>()
-    val finishedEvents: LiveData<List<EventItem>> = _finishedEvents
-
-    private val _isLoadingFinished = MutableLiveData<Boolean>()
-    val isLoadingFinished: LiveData<Boolean> = _isLoadingFinished
-
-    private val _errorFinished = MutableLiveData<String?>()
-    val errorFinished: LiveData<String?> = _errorFinished
-
+    private val _finishedEvents = MutableLiveData<Resource<List<EventItem>>>()
+    val finishedEvents: LiveData<Resource<List<EventItem>>> = _finishedEvents
 
     fun fetchActiveEvents() {
-        if (_activeEvents.value != null) return // Hindari load ulang jika data sudah ada
+        // Avoid load ulang if data is already present and not an error
+        if (_activeEvents.value is Resource.Success) return
         viewModelScope.launch {
-            _isLoadingActive.value = true
-            _errorActive.value = null
-            try {
-                val response = apiService.getEvents(active = 1)
-                if (response.isSuccessful) {
-                    _activeEvents.value = response.body()?.data ?: emptyList()
-                } else {
-                    _errorActive.value = "Error: ${response.code()} ${response.message()}"
-                }
-            } catch (e: Exception) {
-                _errorActive.value = "Failure: ${e.message}"
-            } finally {
-                _isLoadingActive.value = false
-            }
+            _activeEvents.value = Resource.Loading()
+            _activeEvents.value = repository.getEvents(active = 1)
         }
     }
 
     fun fetchFinishedEvents() {
-        if (_finishedEvents.value != null) return // Hindari load ulang
+        // Avoid load ulang if data is already present and not an error
+        if (_finishedEvents.value is Resource.Success) return
         viewModelScope.launch {
-            _isLoadingFinished.value = true
-            _errorFinished.value = null
-            try {
-                val response = apiService.getEvents(active = 0)
-                if (response.isSuccessful) {
-                    _finishedEvents.value = response.body()?.data ?: emptyList()
-                } else {
-                    _errorFinished.value = "Error: ${response.code()} ${response.message()}"
-                }
-            } catch (e: Exception) {
-                _errorFinished.value = "Failure: ${e.message}"
-            } finally {
-                _isLoadingFinished.value = false
-            }
+            _finishedEvents.value = Resource.Loading()
+            _finishedEvents.value = repository.getEvents(active = 0)
         }
     }
 }
