@@ -13,7 +13,6 @@
         <action
             android:id="@+id/action_homeFragment_to_eventDetail"
             app:destination="@id/navigation_event_detail" />
-        <!-- Action to Search Results -->
         <action
             android:id="@+id/action_homeFragment_to_searchEventsFragment"
             app:destination="@id/navigation_search_results" />
@@ -27,7 +26,6 @@
         <action
             android:id="@+id/action_activeEvents_to_eventDetail"
             app:destination="@id/navigation_event_detail" />
-        <!-- Action to Search Results -->
         <action
             android:id="@+id/action_activeEvents_to_searchEventsFragment"
             app:destination="@id/navigation_search_results" />
@@ -41,10 +39,21 @@
         <action
             android:id="@+id/action_finishedEvents_to_eventDetail"
             app:destination="@id/navigation_event_detail" />
-        <!-- Action to Search Results -->
         <action
             android:id="@+id/action_finishedEvents_to_searchEventsFragment"
             app:destination="@id/navigation_search_results" />
+    </fragment>
+
+    <!-- Add Favorites Fragment Destination -->
+    <fragment
+        android:id="@+id/navigation_favorites"
+        android:name="com.example.eventappdicoding.ui.favorite.FavoritesFragment"
+        android:label="@string/title_favorites"
+        tools:layout="@layout/fragment_favorites" >
+        <!-- Action from Favorites list to Detail -->
+        <action
+            android:id="@+id/action_navigation_favorites_to_eventDetail"
+            app:destination="@id/navigation_event_detail" />
     </fragment>
 
     <fragment

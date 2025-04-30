@@ -41,10 +41,10 @@ class MainActivity : AppCompatActivity() {
 
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
-        // **Add navigation_home here**
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.navigation_home, R.id.navigation_active_events, R.id.navigation_finished_events
+                R.id.navigation_home, R.id.navigation_active_events, R.id.navigation_finished_events,
+                R.id.navigation_favorites // Add Favorites ID
             )
         )
         // Setup ActionBar (our Toolbar) with NavController and the updated AppBarConfiguration
@@ -101,16 +101,14 @@ class MainActivity : AppCompatActivity() {
             R.id.navigation_home -> HomeFragmentDirections.actionHomeFragmentToSearchEventsFragment(query)
             R.id.navigation_active_events -> ActiveEventsFragmentDirections.actionActiveEventsToSearchEventsFragment(query)
             R.id.navigation_finished_events -> FinishedEventsFragmentDirections.actionFinishedEventsToSearchEventsFragment(query)
-            // Add cases for other fragments if search is accessible from them
+            // Add case for FavoritesFragment if search should be accessible from there
+            // R.id.navigation_favorites -> FavoritesFragmentDirections.actionFavoritesFragmentToSearchEventsFragment(query) // Define this action if needed
             else -> null // Or a global action if defined: MobileNavigationDirections.actionGlobalSearchEventsFragment(query)
         }
 
         action?.let {
             navController.navigate(it)
         } ?: run {
-            // Fallback or error handling if navigation action not found for current destination
-            // This might happen if you are already in the search fragment or detail fragment
-            // Consider using a global action if search should be possible from anywhere.
             android.util.Log.w("MainActivity", "Could not find navigation action for search from destination $currentDestinationId")
             // Maybe try a global action?
             // try { navController.navigate(MobileNavigationDirections.actionGlobalSearchEventsFragment(query)) } catch (e: Exception) { }

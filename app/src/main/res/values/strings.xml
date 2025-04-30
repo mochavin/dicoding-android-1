@@ -7,6 +7,7 @@
     <string name="title_active_events">Event Aktif</string>
     <string name="title_finished_events">Event Selesai</string>
     <string name="title_event_detail">Detail Event</string>
+    <string name="title_favorites">Favorit</string>
 
     <string name="event_image_description">Gambar Event</string>
     <string name="error_loading_data">Gagal memuat data event.</string>
@@ -19,6 +20,7 @@
     <string name="open_event_link">Buka Link Event</string>
     <string name="remaining_quota_format">Sisa Kuota: %1$d</string>
     <string name="no_link_available">Link event tidak tersedia</string>
+    <string name="link_info_not_loaded">Info link belum dimuat.</string>
     <string name="failed_to_open_link">Gagal membuka link</string>
     <string name="no_active_events">Tidak ada event aktif saat ini.</string>
     <string name="no_finished_events">Tidak ada event yang telah selesai.</string>
@@ -33,4 +35,9 @@
 
     <string name="error_network">Tidak ada koneksi internet. Periksa jaringan Anda.</string>
     <string name="error_unexpected">Terjadi kesalahan yang tidak diduga.</string>
+
+    <!-- Favorite Feature Strings -->
+    <string name="toggle_favorite">Tambah/Hapus Favorit</string>
+    <string name="no_favorites_yet">Anda belum menambahkan event favorit.</string>
+
 </resources>

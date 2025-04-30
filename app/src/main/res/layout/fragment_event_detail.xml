@@ -20,8 +20,10 @@
 
     <TextView
         android:id="@+id/tv_error_detail"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:textAlignment="center"
         android:text="@string/error_loading_detail"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -33,7 +35,7 @@
     <ScrollView
         android:id="@+id/content_scroll_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:visibility="gone"
         tools:visibility="visible"
         app:layout_constraintTop_toTopOf="parent"
@@ -44,7 +46,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="16dp">
+            android:paddingBottom="80dp">
 
             <ImageView
                 android:id="@+id/iv_detail_image"
@@ -184,5 +186,18 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
+
+    <!-- Favorite Toggle Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_favorite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/toggle_favorite"
+        app:srcCompat="@drawable/baseline_favorite_border_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@android:color/white" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

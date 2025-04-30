@@ -16,4 +16,10 @@
         android:icon="@drawable/ic_event_busy_24"
         android:title="@string/title_finished_events" />
 
+    <!-- Add Favorites Item -->
+    <item
+        android:id="@+id/navigation_favorites"
+        android:icon="@drawable/baseline_favorite_24"
+        android:title="@string/title_favorites" />
+
 </menu>

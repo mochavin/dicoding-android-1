@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.androidx.navigation.safeargs.kotlin)
+    alias(libs.plugins.devtools.ksp)
 }
 
 android {
@@ -37,6 +38,9 @@ android {
     }
     buildFeatures {
         viewBinding = true
+    }
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
     }
 }
 
@@ -76,4 +80,9 @@ dependencies {
 
     // ConstraintLayout
     implementation(libs.androidx.constraintlayout.v214)
+
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
 }
